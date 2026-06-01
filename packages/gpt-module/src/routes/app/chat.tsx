@@ -35,6 +35,7 @@ function ChatPage() {
   const qc = useQueryClient();
   
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [streamingText, setStreamingText] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [phase, setPhase] = useState<StreamPhase>("idle");
