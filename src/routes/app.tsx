@@ -18,7 +18,7 @@ function AppLayout() {
 
   useEffect(() => {
     if (!loading && !session) {
-      navigate({ to: "/login", replace: true, search: { redirect: pathname } as never });
+      navigate({ to: "/", replace: true });
     }
   }, [loading, session, navigate, pathname]);
 
