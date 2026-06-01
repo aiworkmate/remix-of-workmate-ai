@@ -8,6 +8,7 @@ interface ComposerProps {
   disabled?: boolean;
   isStreaming?: boolean;
   onSend: (text: string, attachments: MessageAttachment[]) => void | Promise<void>;
+  onStop?: () => void;
 }
 
 /**
