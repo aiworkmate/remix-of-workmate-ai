@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { Loader2, Paperclip, Send } from "lucide-react";
+import { Loader2, Paperclip, Send, Square } from "lucide-react";
 import { createPending, releasePending, uploadAttachment, toMessageAttachment, type PendingAttachment } from "@/services/attachments";
 import type { MessageAttachment } from "@/lib/api/endpoints";
 import { PendingAttachmentCard } from "./attachment-card";
@@ -8,13 +8,14 @@ interface ComposerProps {
   disabled?: boolean;
   isStreaming?: boolean;
   onSend: (text: string, attachments: MessageAttachment[]) => void | Promise<void>;
+  onStop?: () => void;
 }
 
 /**
  * Chat composer with drag/drop attachment support. Storage is delegated to
  * `services/attachments` — this component only manages local UI state.
  */
-export function Composer({ disabled, isStreaming, onSend }: ComposerProps) {
+export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProps) {
   const [text, setText] = useState("");
   const [pending, setPending] = useState<PendingAttachment[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -109,14 +110,26 @@ export function Composer({ disabled, isStreaming, onSend }: ComposerProps) {
           disabled={disabled}
           className="max-h-40 min-h-[40px] flex-1 resize-none bg-transparent px-1 py-2 text-sm outline-none placeholder:text-muted-foreground/70 disabled:opacity-50"
         />
-        <button
-          onClick={handleSubmit}
-          disabled={!canSend}
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gradient-primary text-primary-foreground shadow-glow transition disabled:opacity-40"
-          aria-label="Send message"
-        >
-          {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        </button>
+        {isStreaming && onStop ? (
+          <button
+            onClick={onStop}
+            type="button"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-destructive/90 text-destructive-foreground shadow-glow transition hover:bg-destructive"
+            aria-label="Stop generation"
+            title="Stop generating"
+          >
+            <Square className="h-3.5 w-3.5 fill-current" />
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={!canSend}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gradient-primary text-primary-foreground shadow-glow transition disabled:opacity-40"
+            aria-label="Send message"
+          >
+            {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </button>
+        )}
       </div>
     </div>
   );
