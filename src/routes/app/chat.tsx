@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useEffect, useRef, useState } from "react";
-import { MessageSquare, Plus, Sparkles, ShieldCheck, Brain, Pencil, Check, X, Menu } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Sparkles, ShieldCheck, Brain, Pencil, Check, X, Menu, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { EmptyState } from "@/components/page-primitives";
 import { toast } from "sonner";
 import { Composer } from "@/components/chat/composer";
 import { MessageBubble, type ToolEvent } from "@/components/chat/message-bubble";
 import { ConversationItem } from "@/components/chat/conversation-item";
+import { ChatWelcome } from "@/components/chat/welcome";
 import { submitMemoryFeedback } from "@/lib/chat/feedback.functions";
 import type { MessageAttachment } from "@/lib/api/endpoints";
+
 
 
 export const Route = createFileRoute("/app/chat")({
@@ -31,8 +32,10 @@ interface Message {
 type StreamPhase = "idle" | "thinking" | "searching" | "generating" | "streaming";
 
 function ChatPage() {
-  const { user, session } = useAuth();
+  const { user, session, profile } = useAuth();
   const qc = useQueryClient();
+  const [convSearch, setConvSearch] = useState("");
+
   
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -406,31 +409,56 @@ function ChatPage() {
     setMobileDrawerOpen(false);
   }
 
+  const filteredConversations = useMemo(() => {
+    const q = convSearch.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter((c) => c.title.toLowerCase().includes(q));
+  }, [conversations, convSearch]);
+
   const sidebarBody = (
     <>
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-border px-3 py-3">
         <span className="font-display text-sm font-semibold">Conversations</span>
-        <button onClick={createConversation} className="grid h-7 w-7 place-items-center rounded-md border border-border bg-surface hover:bg-accent" title="New chat">
-          <Plus className="h-3.5 w-3.5" />
+        <button
+          onClick={createConversation}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary px-2.5 py-1.5 text-xs font-medium text-primary-foreground shadow-glow transition hover:opacity-90 active:scale-95"
+          title="New chat"
+        >
+          <Plus className="h-3.5 w-3.5" /> New
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-2">
+      <div className="border-b border-border px-3 py-2.5">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={convSearch}
+            onChange={(e) => setConvSearch(e.target.value)}
+            placeholder="Search conversations"
+            className="h-8 w-full rounded-lg border border-border bg-background/60 pl-8 pr-2.5 text-xs outline-none placeholder:text-muted-foreground/70 focus:border-primary/40 focus:ring-2 focus:ring-ring/30"
+          />
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2">
         {conversationsQ.isLoading ? (
           <ConversationSkeletons />
-        ) : conversations.length === 0 ? (
-          <div className="px-3 py-8 text-center text-xs text-muted-foreground">No conversations yet.</div>
+        ) : filteredConversations.length === 0 ? (
+          <div className="px-3 py-10 text-center text-xs text-muted-foreground">
+            {convSearch ? "No matches." : "No conversations yet. Start one below."}
+          </div>
         ) : (
-          conversations.map((c) => (
-            <ConversationItem
-              key={c.id}
-              id={c.id}
-              title={c.title}
-              active={activeId === c.id}
-              onSelect={() => selectConversation(c.id)}
-              onRename={(t) => renameConversation(c.id, t)}
-              onDelete={() => deleteConversation(c.id)}
-            />
-          ))
+          <div className="space-y-0.5">
+            {filteredConversations.map((c) => (
+              <ConversationItem
+                key={c.id}
+                id={c.id}
+                title={c.title}
+                active={activeId === c.id}
+                onSelect={() => selectConversation(c.id)}
+                onRename={(t) => renameConversation(c.id, t)}
+                onDelete={() => deleteConversation(c.id)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </>
@@ -467,23 +495,25 @@ function ChatPage() {
         />
 
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin">
+        <div ref={scrollRef} className="relative flex-1 overflow-y-auto scrollbar-thin">
           {messagesLoading ? (
-            <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+            <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
               <MessageSkeleton />
               <MessageSkeleton align="right" />
               <MessageSkeleton />
             </div>
           ) : messages.length === 0 && !isStreaming ? (
-            <div className="grid h-full place-items-center p-8">
-              <EmptyState
-                icon={MessageSquare}
-                title="Start a secure conversation"
-                description="Ask anything. The orchestrator handles memory, tool calls, and policy on the server."
-              />
-            </div>
+            <>
+              <div className="pointer-events-none absolute inset-0 bg-mesh opacity-60" aria-hidden />
+              <div className="relative h-full">
+                <ChatWelcome
+                  name={profile?.display_name || undefined}
+                  onPick={(prompt) => sendMessage(prompt, [])}
+                />
+              </div>
+            </>
           ) : (
-            <div className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+            <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
               {messages.map((m) => {
                 const meta = responseMeta[m.id];
                 return (
@@ -515,18 +545,17 @@ function ChatPage() {
                   }
                 />
               )}
-
-
             </div>
           )}
         </div>
 
-        <div className="border-t border-border bg-background/60 p-4 backdrop-blur">
+        <div className="glass-strong border-t border-border px-3 pb-safe pt-3 sm:px-4 sm:pt-4">
           <Composer isStreaming={isStreaming} onSend={sendMessage} onStop={stopStream} />
-          <p className="mx-auto mt-2 max-w-3xl text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground/70">
-            Responses are final outputs only. Tool traces are not displayed.
+          <p className="mx-auto mt-2 max-w-3xl text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
+            AI WorkMate can make mistakes. Verify important information.
           </p>
         </div>
+
       </section>
     </div>
   );
