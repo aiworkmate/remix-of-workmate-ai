@@ -214,7 +214,7 @@ export const Route = createFileRoute("/api/chat")({
           });
 
           const tParallel = Date.now();
-          const [conv, memories, routingPref, adaptiveProfile] = await Promise.all([
+          const [conv, memories, routingPref, adaptiveProfile, storedSummary] = await Promise.all([
             safe(() => fetchConversation(sb, parsed.conversationId), null, "conv"),
             needsMemory
               ? safe(() => recallMemories(userId, 8, lastUserText), [] as MemoryEntry[], "memory")
@@ -225,7 +225,11 @@ export const Route = createFileRoute("/api/chat")({
               "routing_pref",
             ),
             safe(() => recallAdaptiveProfile(userId), null, "adaptive_profile"),
+            safe(() => loadConversationSummary(parsed.conversationId), null as string | null, "summary"),
           ]);
+          const trimmed = trimHistoryWithSummary(parsed.messages, storedSummary);
+          const summaryBlock = formatSummaryForPrompt(trimmed.summary, trimmed.trimmedCount);
+          log(reqId, "router", "ok", { historyTrimmed: trimmed.trimmedCount, summaryChars: summaryBlock?.length ?? 0 });
 
           const liveAllowedByProfile = liveRequired || !adaptiveProfile || adaptiveProfile.liveDataEffectiveness >= 0.18 || aiControl.forceLiveData;
           const shouldAttemptLive = needsLiveData && liveAllowedByProfile && (liveRequired || routingPref.preferLive !== false || aiControl.forceLiveData);
