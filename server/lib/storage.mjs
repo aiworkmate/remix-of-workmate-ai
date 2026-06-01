@@ -9,6 +9,12 @@ const emptyDb = {
   messages: [],
   memories: [],
   uploads: [],
+  projects: [],
+  goals: [],
+  tasks: [],
+  decisions: [],
+  conversationSummaries: [],
+  aiOperatingEvents: [],
   auditLogs: [],
   analytics: []
 };
