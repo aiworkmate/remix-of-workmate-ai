@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageSquare, Plus, Sparkles, ShieldCheck, Brain, Pencil, Check, X } from "lucide-react";
+import { MessageSquare, Plus, Sparkles, ShieldCheck, Brain, Pencil, Check, X, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { EmptyState } from "@/components/page-primitives";
