@@ -2,15 +2,6 @@
 
 AI WorkMate is a full-stack AI operating system foundation built for secure chat, live data retrieval, memory, file understanding, medical assistive workflows, and enterprise administration.
 
-## Product Direction
-
-AI WorkMate is being built as a world-class personal and professional AI operating system, not just a chatbot. It is designed to become a smart workspace, long-term memory companion, research assistant, planning engine, live information agent, project management layer, and personal operating system for work and life.
-
-See:
-
-- [World-Class AI Operating System Blueprint](./docs/WORLD_CLASS_AI_OPERATING_SYSTEM.md)
-- [Implementation Roadmap](./docs/IMPLEMENTATION_ROADMAP.md)
-
 ## Repository Structure
 
 This is a unified monorepo consolidating four repositories:
@@ -36,6 +27,7 @@ AI-WorkMate/
 
 - Secure backend API with HTTP-only sessions, CSRF tokens, PBKDF2 password hashing, rate limiting, CSP, security headers, and role checks.
 - AI orchestration layer that routes each request through memory retrieval, upload context, live tools, and medical guardrails.
+- Backend AI operating-system intelligence for request classification, bounded context assembly, context health scoring, conversation summaries, project/goal/task/decision signal extraction, and outcome logging.
 - Live tool adapters for weather, web search, news, calculations, and PubMed medical research, with optional commercial search providers.
 - Real memory layer using structured records plus local semantic vector retrieval.
 - File and image intake with private server storage, text/PDF extraction, image metadata, and server-side vision model handoff.
