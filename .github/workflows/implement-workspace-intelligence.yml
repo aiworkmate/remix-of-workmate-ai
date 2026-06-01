@@ -1,0 +1,373 @@
+name: Implement Workspace Intelligence
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  implement:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Patch backend and frontend
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          from pathlib import Path
+
+          storage = Path('server/lib/storage.mjs')
+          text = storage.read_text()
+          text = text.replace(
+              "  uploads: [],\n  auditLogs: [],\n  analytics: []",
+              "  uploads: [],\n  projects: [],\n  goals: [],\n  tasks: [],\n  contextHealth: [],\n  auditLogs: [],\n  analytics: []"
+          )
+          storage.write_text(text)
+
+          app = Path('server/app.mjs')
+          text = app.read_text()
+          route_anchor = "  if (url.pathname === '/api/memory' && req.method === 'POST') return memoryCreate(req, res, store, user);\n  if (url.pathname === '/api/account' && req.method === 'PUT') return accountUpdate(req, res, store, user);"
+          route_patch = """  if (url.pathname === '/api/memory' && req.method === 'POST') return memoryCreate(req, res, store, user);
+  if (url.pathname === '/api/projects' && req.method === 'GET') return workspaceList(res, store, user, 'projects');
+  if (url.pathname === '/api/projects' && req.method === 'POST') return workspaceCreate(req, res, store, user, 'projects');
+  if (url.pathname === '/api/goals' && req.method === 'GET') return workspaceList(res, store, user, 'goals');
+  if (url.pathname === '/api/goals' && req.method === 'POST') return workspaceCreate(req, res, store, user, 'goals');
+  if (url.pathname === '/api/tasks' && req.method === 'GET') return workspaceList(res, store, user, 'tasks');
+  if (url.pathname === '/api/tasks' && req.method === 'POST') return workspaceCreate(req, res, store, user, 'tasks');
+  if (url.pathname === '/api/context/health' && req.method === 'GET') return contextHealth(res, store, user);
+  if (url.pathname === '/api/account' && req.method === 'PUT') return accountUpdate(req, res, store, user);"""
+          if route_anchor not in text:
+              raise SystemExit('route anchor not found')
+          text = text.replace(route_anchor, route_patch)
+
+          func_anchor = "async function accountUpdate(req, res, store, user) {"
+          workspace_funcs = r'''
+function workspaceSummary(db, userId) {
+  const projects = (db.projects || []).filter((item) => item.userId === userId && item.status !== 'archived');
+  const goals = (db.goals || []).filter((item) => item.userId === userId && item.status !== 'archived');
+  const tasks = (db.tasks || []).filter((item) => item.userId === userId && item.status !== 'archived');
+  return {
+    activeProjects: projects.filter((item) => item.status !== 'done').length,
+    activeGoals: goals.filter((item) => item.status !== 'done').length,
+    openTasks: tasks.filter((item) => item.status !== 'done').length,
+    blockers: tasks.filter((item) => item.priority === 'blocker' || item.status === 'blocked').length
+  };
+}
+
+function workspaceList(res, store, user, kind) {
+  const db = store.snapshot();
+  const items = (db[kind] || [])
+    .filter((item) => item.userId === user.id && item.status !== 'archived')
+    .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
+  return json(res, 200, { [kind]: items, summary: workspaceSummary(db, user.id) });
+}
+
+async function workspaceCreate(req, res, store, user, kind) {
+  const body = await readJson(req, 64_000);
+  const title = sanitizeText(body.title || body.name || 'Untitled', 120) || 'Untitled';
+  const summary = sanitizeText(body.summary || body.description || '', 1200);
+  const status = sanitizeText(body.status || 'active', 40) || 'active';
+  const priority = sanitizeText(body.priority || 'normal', 40) || 'normal';
+  const now = nowISO();
+  let item;
+  await store.update((db) => {
+    if (!Array.isArray(db[kind])) db[kind] = [];
+    item = {
+      id: uid(kind.slice(0, -1) || 'item'),
+      userId: user.id,
+      title,
+      summary,
+      status,
+      priority,
+      source: sanitizeText(body.source || 'manual', 80),
+      dueAt: body.dueAt || null,
+      tags: Array.isArray(body.tags) ? body.tags.slice(0, 12).map((tag) => sanitizeText(tag, 40)).filter(Boolean) : [],
+      relatedMemoryIds: Array.isArray(body.relatedMemoryIds) ? body.relatedMemoryIds.slice(0, 20) : [],
+      relatedUploadIds: Array.isArray(body.relatedUploadIds) ? body.relatedUploadIds.slice(0, 20) : [],
+      createdAt: now,
+      updatedAt: now
+    };
+    db[kind].push(item);
+    if (!Array.isArray(db.contextHealth)) db.contextHealth = [];
+    db.contextHealth.push({
+      id: uid('ctx'),
+      userId: user.id,
+      type: `${kind}.create`,
+      payload: { title, status, priority },
+      createdAt: now
+    });
+  });
+  await audit(store, { actorId: user.id, type: `${kind}.create`, targetId: item.id, detail: { title, status, priority } });
+  return json(res, 201, { [kind.slice(0, -1) || 'item']: item });
+}
+
+function contextHealth(res, store, user) {
+  const db = store.snapshot();
+  const conversations = db.conversations.filter((item) => item.userId === user.id);
+  const messages = db.messages.filter((item) => item.userId === user.id);
+  const memories = db.memories.filter((item) => item.userId === user.id && !item.archived);
+  const uploads = db.uploads.filter((item) => item.userId === user.id);
+  const health = (db.contextHealth || []).filter((item) => item.userId === user.id).slice(-60).reverse();
+  return json(res, 200, {
+    summary: {
+      conversations: conversations.length,
+      messages: messages.length,
+      memories: memories.length,
+      uploads: uploads.length,
+      ...workspaceSummary(db, user.id),
+      estimatedContextPressure: Math.min(100, Math.round(messages.length / 8 + memories.length / 3 + uploads.length * 2))
+    },
+    events: health
+  });
+}
+
+'''
+          if func_anchor not in text:
+              raise SystemExit('function anchor not found')
+          text = text.replace(func_anchor, workspace_funcs + func_anchor)
+          app.write_text(text)
+
+          index = Path('public/index.html')
+          text = index.read_text()
+          nav_anchor = '          <button class="nav-item" data-view="memory"><svg><use href="#i-brain"></use></svg><span>Memory</span></button>\n          <button class="nav-item" data-view="uploads"><svg><use href="#i-upload"></use></svg><span>Files</span></button>'
+          nav_patch = '          <button class="nav-item" data-view="memory"><svg><use href="#i-brain"></use></svg><span>Memory</span></button>\n          <button class="nav-item" data-view="projects"><svg><use href="#i-grid"></use></svg><span>Projects</span></button>\n          <button class="nav-item" data-view="tasks"><svg><use href="#i-grid"></use></svg><span>Tasks</span></button>\n          <button class="nav-item" data-view="knowledge"><svg><use href="#i-search"></use></svg><span>Knowledge</span></button>\n          <button class="nav-item" data-view="uploads"><svg><use href="#i-upload"></use></svg><span>Files</span></button>'
+          if nav_anchor not in text:
+              raise SystemExit('nav anchor not found')
+          text = text.replace(nav_anchor, nav_patch)
+
+          section_anchor = '        <section id="uploadsView" class="view">'
+          workspace_sections = r'''        <section id="projectsView" class="view">
+          <div class="section-title"><h2>Projects</h2><button id="refreshProjects" class="ghost-button">Refresh</button></div>
+          <form id="projectForm" class="inline-form workspace-form">
+            <input id="projectTitle" placeholder="Project name">
+            <input id="projectSummary" placeholder="Current state, risks, or next action">
+            <button class="primary-button" type="submit">Add Project</button>
+          </form>
+          <div id="projectList" class="data-list workspace-list"></div>
+        </section>
+
+        <section id="tasksView" class="view">
+          <div class="section-title"><h2>Tasks and Goals</h2><button id="refreshTasks" class="ghost-button">Refresh</button></div>
+          <form id="goalForm" class="inline-form workspace-form">
+            <input id="goalTitle" placeholder="Goal">
+            <input id="goalSummary" placeholder="Target, obstacle, or timeline">
+            <button class="primary-button" type="submit">Add Goal</button>
+          </form>
+          <form id="taskForm" class="inline-form workspace-form">
+            <input id="taskTitle" placeholder="Task">
+            <select id="taskPriority"><option value="normal">Normal</option><option value="high">High</option><option value="blocker">Blocker</option></select>
+            <button class="primary-button" type="submit">Add Task</button>
+          </form>
+          <div class="dashboard-grid" id="workSummaryCards"></div>
+          <div id="goalList" class="data-list workspace-list"></div>
+          <div id="taskList" class="data-list workspace-list"></div>
+        </section>
+
+        <section id="knowledgeView" class="view">
+          <div class="section-title"><h2>Knowledge and Context Health</h2><button id="refreshKnowledge" class="ghost-button">Refresh</button></div>
+          <div class="dashboard-grid" id="contextHealthCards"></div>
+          <div class="wide-panel">
+            <h3>Context Health Events</h3>
+            <div id="contextHealthList" class="data-list"></div>
+          </div>
+        </section>
+
+'''
+          if section_anchor not in text:
+              raise SystemExit('section anchor not found')
+          text = text.replace(section_anchor, workspace_sections + section_anchor)
+
+          script_anchor = '    <script src="/app.js?v=20260530-v3" type="module"></script>'
+          script_patch = '    <script src="/app.js?v=20260530-v3" type="module"></script>\n    <script src="/workspace.js?v=20260601-v1" type="module"></script>'
+          if script_anchor not in text:
+              raise SystemExit('script anchor not found')
+          text = text.replace(script_anchor, script_patch)
+          index.write_text(text)
+
+          workspace_js = Path('public/workspace.js')
+          workspace_js.write_text(r'''
+const $ = (selector) => document.querySelector(selector);
+
+function csrfToken() {
+  return document.cookie.split('; ').find((item) => item.startsWith('wm_csrf='))?.split('=')[1] || '';
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(path, {
+    credentials: 'same-origin',
+    ...options,
+    headers: {
+      ...(options.body ? { 'content-type': 'application/json' } : {}),
+      ...(csrfToken() ? { 'x-csrf-token': decodeURIComponent(csrfToken()) } : {}),
+      ...(options.headers || {})
+    }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+  return data;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  })[char]);
+}
+
+function empty(text) {
+  return `<div class="list-item"><p>${escapeHtml(text)}</p></div>`;
+}
+
+function cards(target, items) {
+  if (!target) return;
+  target.innerHTML = items.map(([label, value]) => `<div class="metric-card"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join('');
+}
+
+function renderItems(target, items, emptyText) {
+  if (!target) return;
+  target.innerHTML = items.map((item) => `
+    <div class="list-item workspace-item">
+      <strong>${escapeHtml(item.title)}</strong>
+      <p>${escapeHtml(item.summary || 'No summary yet')}</p>
+      <span class="chip">${escapeHtml(item.status || 'active')}</span>
+      <span class="chip"><strong>${escapeHtml(item.priority || 'normal')}</strong></span>
+    </div>
+  `).join('') || empty(emptyText);
+}
+
+async function loadWorkspace() {
+  const [projects, goals, tasks, health] = await Promise.all([
+    api('/api/projects').catch(() => ({ projects: [], summary: {} })),
+    api('/api/goals').catch(() => ({ goals: [], summary: {} })),
+    api('/api/tasks').catch(() => ({ tasks: [], summary: {} })),
+    api('/api/context/health').catch(() => ({ summary: {}, events: [] }))
+  ]);
+
+  renderItems($('#projectList'), projects.projects || [], 'No projects yet');
+  renderItems($('#goalList'), goals.goals || [], 'No goals yet');
+  renderItems($('#taskList'), tasks.tasks || [], 'No tasks yet');
+
+  const summary = health.summary || {};
+  cards($('#workSummaryCards'), [
+    ['Projects', summary.activeProjects || 0],
+    ['Goals', summary.activeGoals || 0],
+    ['Open Tasks', summary.openTasks || 0]
+  ]);
+  cards($('#contextHealthCards'), [
+    ['Conversations', summary.conversations || 0],
+    ['Memories', summary.memories || 0],
+    ['Context Pressure', `${summary.estimatedContextPressure || 0}%`]
+  ]);
+
+  const healthList = $('#contextHealthList');
+  if (healthList) {
+    healthList.innerHTML = (health.events || []).map((event) => `
+      <div class="list-item">
+        <strong>${escapeHtml(event.type)}</strong>
+        <p>${escapeHtml(new Date(event.createdAt).toLocaleString())}</p>
+      </div>
+    `).join('') || empty('No context health events yet');
+  }
+}
+
+async function createItem(kind, payload) {
+  await api(`/api/${kind}`, { method: 'POST', body: JSON.stringify(payload) });
+  await loadWorkspace();
+}
+
+function bindWorkspace() {
+  $('#refreshProjects')?.addEventListener('click', loadWorkspace);
+  $('#refreshTasks')?.addEventListener('click', loadWorkspace);
+  $('#refreshKnowledge')?.addEventListener('click', loadWorkspace);
+
+  $('#projectForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const title = $('#projectTitle').value.trim();
+    if (!title) return;
+    await createItem('projects', { title, summary: $('#projectSummary').value.trim(), status: 'active' });
+    event.currentTarget.reset();
+  });
+
+  $('#goalForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const title = $('#goalTitle').value.trim();
+    if (!title) return;
+    await createItem('goals', { title, summary: $('#goalSummary').value.trim(), status: 'active' });
+    event.currentTarget.reset();
+  });
+
+  $('#taskForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const title = $('#taskTitle').value.trim();
+    if (!title) return;
+    await createItem('tasks', { title, priority: $('#taskPriority').value, status: 'active' });
+    event.currentTarget.reset();
+  });
+
+  document.querySelectorAll('[data-view]').forEach((button) => {
+    button.addEventListener('click', () => {
+      if (['projects', 'tasks', 'knowledge'].includes(button.dataset.view)) loadWorkspace();
+    });
+  });
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  bindWorkspace();
+  setTimeout(loadWorkspace, 500);
+});
+''')
+
+          css = Path('public/styles.css')
+          css_text = css.read_text()
+          css_text += r'''
+
+.workspace-form {
+  grid-template-columns: minmax(160px, 1fr) minmax(180px, 2fr) auto;
+  margin-bottom: 12px;
+}
+
+.workspace-list {
+  margin-top: 14px;
+}
+
+.workspace-item {
+  display: grid;
+  gap: 7px;
+}
+
+@media (max-width: 780px) {
+  .workspace-form {
+    grid-template-columns: 1fr;
+  }
+}
+'''
+          css.write_text(css_text)
+          PY
+
+      - name: Commit workspace intelligence implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/implement-workspace-intelligence.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No workspace intelligence changes needed."
+            exit 0
+          fi
+          git commit -m "Implement workspace intelligence surfaces"
+          git push
