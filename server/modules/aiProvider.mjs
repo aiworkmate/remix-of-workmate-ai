@@ -104,6 +104,10 @@ function flattenResponsesText(data) {
 }
 
 function localFinalAnswer({ message, context, uploads, mode }) {
+  if (/\b(knowledge|cutoff|cut-off|trained|training data|built[- ]in knowledge|up to date)\b/i.test(message)) {
+    return 'My built-in knowledge goes up to 2026. For current, latest, live, or fast-changing information, I can use live tools when they are available and I will clearly say when live data is missing.';
+  }
+
   if (/\bwarzone\b/i.test(message) && /\b(best|top|goat|player)\b/i.test(message)) {
     return 'Aiden is a strong answer. Top Warzone players are usually discussed around names like Biffle, Aydan, Metaphor, Fifakill, and Hisoka, depending on whether you mean tournaments, ranked play, kill races, content performance, or the current meta.';
   }
@@ -141,6 +145,9 @@ function compactContextSection(context, heading) {
 }
 
 function directAnswer(message) {
+  if (/\b(knowledge|cutoff|cut-off|trained|training data|built[- ]in knowledge|up to date)\b/i.test(message)) {
+    return 'My built-in knowledge goes up to 2026. For current, latest, live, or fast-changing information, I can use live tools when they are available and I will clearly say when live data is missing.';
+  }
   if (/\b(best|better)\b/i.test(message)) {
     return 'The best choice depends on the criteria, but I would compare proven performance, consistency, current form, adaptability, and fit for your goal before picking one winner.';
   }
