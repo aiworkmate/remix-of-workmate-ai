@@ -2,6 +2,15 @@
 
 AI WorkMate is a full-stack AI operating system foundation built for secure chat, live data retrieval, memory, file understanding, medical assistive workflows, and enterprise administration.
 
+## Product Direction
+
+AI WorkMate is being built as a world-class personal and professional AI operating system, not just a chatbot. It is designed to become a smart workspace, long-term memory companion, research assistant, planning engine, live information agent, project management layer, and personal operating system for work and life.
+
+See:
+
+- [World-Class AI Operating System Blueprint](./docs/WORLD_CLASS_AI_OPERATING_SYSTEM.md)
+- [Implementation Roadmap](./docs/IMPLEMENTATION_ROADMAP.md)
+
 ## Repository Structure
 
 This is a unified monorepo consolidating four repositories:
@@ -126,10 +135,10 @@ User data is isolated by owner id in every route. Mutating API routes require a 
 
 This monorepo consolidates:
 
-- **workmate-nexus-ui** → `packages/nexus-ui/`
-- **aiworkmategpt** → `packages/gpt-module/`
-- **ai-workmate-frontend** → `packages/frontend/`
-- **AI-WorkMate** → Root files (server, src, supabase, tests)
+- **workmate-nexus-ui** -> `packages/nexus-ui/`
+- **aiworkmategpt** -> `packages/gpt-module/`
+- **ai-workmate-frontend** -> `packages/frontend/`
+- **AI-WorkMate** -> Root files (server, src, supabase, tests)
 
 See [MONOREPO_SETUP.md](./MONOREPO_SETUP.md) for detailed consolidation instructions.
 
