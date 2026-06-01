@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { Loader2, Paperclip, Send } from "lucide-react";
+import { Loader2, Paperclip, Send, Square } from "lucide-react";
 import { createPending, releasePending, uploadAttachment, toMessageAttachment, type PendingAttachment } from "@/services/attachments";
 import type { MessageAttachment } from "@/lib/api/endpoints";
 import { PendingAttachmentCard } from "./attachment-card";
