@@ -532,7 +532,7 @@ function ChatPage() {
   );
 }
 
-function ThreadHeader({ title, canRename, onRename }: { title: string; canRename: boolean; onRename: (t: string) => void }) {
+function ThreadHeader({ title, canRename, onRename, onOpenDrawer }: { title: string; canRename: boolean; onRename: (t: string) => void; onOpenDrawer?: () => void }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(title);
   useEffect(() => setDraft(title), [title]);
@@ -540,6 +540,15 @@ function ThreadHeader({ title, canRename, onRename }: { title: string; canRename
   return (
     <div className="flex items-center justify-between border-b border-border px-6 py-3">
       <div className="flex min-w-0 items-center gap-2 text-sm">
+        {onOpenDrawer && (
+          <button
+            onClick={onOpenDrawer}
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground lg:hidden"
+            aria-label="Open conversations"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+        )}
         <Sparkles className="h-4 w-4 shrink-0 text-primary-glow" />
         {editing ? (
           <>
