@@ -394,6 +394,18 @@ function ChatPage() {
   const activeConv = conversations.find((c) => c.id === activeId);
   const messagesLoading = messagesQ.isLoading && !!activeId;
 
+  function stopStream() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setIsStreaming(false);
+    setPhase("idle");
+  }
+
+  function selectConversation(id: string) {
+    setActiveId(id);
+    setMobileDrawerOpen(false);
+  }
+
   return (
     <div className="flex h-full">
       {/* Conversation list */}
