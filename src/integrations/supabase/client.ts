@@ -20,13 +20,16 @@ function readEnv(...keys: string[]) {
 
 function createSupabaseClient() {
   // Lovable Cloud may expose either the publishable-key or anon-key naming convention.
-  const SUPABASE_URL = readEnv('VITE_SUPABASE_URL', 'SUPABASE_URL');
-  const SUPABASE_PUBLISHABLE_KEY = readEnv(
-    'VITE_SUPABASE_PUBLISHABLE_KEY',
-    'VITE_SUPABASE_ANON_KEY',
-    'SUPABASE_PUBLISHABLE_KEY',
-    'SUPABASE_ANON_KEY',
-  );
+  const SUPABASE_URL =
+    readEnv('VITE_SUPABASE_URL', 'SUPABASE_URL') ||
+    'https://zcgohpaocqolykadgsha.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY =
+    readEnv(
+      'VITE_SUPABASE_PUBLISHABLE_KEY',
+      'VITE_SUPABASE_ANON_KEY',
+      'SUPABASE_PUBLISHABLE_KEY',
+      'SUPABASE_ANON_KEY',
+    ) || 'sb_publishable_JMRSmbQuVqzFmwEGyKTOkw_p5D7wacU';
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
