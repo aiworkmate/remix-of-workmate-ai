@@ -2,11 +2,17 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const env = import.meta.env;
+type RuntimeProcess = {
+  env?: Record<string, string | undefined>;
+};
+
+const viteEnv = import.meta.env;
+const runtimeEnv =
+  typeof process !== 'undefined' ? (process as RuntimeProcess).env : undefined;
 
 function readEnv(...keys: string[]) {
   for (const key of keys) {
-    const value = env[key] || process.env[key];
+    const value = viteEnv[key] || runtimeEnv?.[key];
     if (value) return value;
   }
   return undefined;
