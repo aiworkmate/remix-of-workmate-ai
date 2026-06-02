@@ -12,6 +12,7 @@ import { ConversationItem } from "@/components/chat/conversation-item";
 import { ChatWelcome } from "@/components/chat/welcome";
 import { submitMemoryFeedback } from "@/lib/chat/feedback.functions";
 import type { MessageAttachment } from "@/lib/api/endpoints";
+import { speak as voiceSpeak, useAutoSpeak } from "@/hooks/use-voice-mode";
 
 
 
