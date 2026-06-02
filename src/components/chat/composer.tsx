@@ -24,6 +24,23 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [autoSpeak, setAutoSpeak] = useAutoSpeak();
+  const baseTextRef = useRef("");
+  const { listening, start: startListen, stop: stopListen, supported: micSupported } =
+    useSpeechRecognition((transcript, final) => {
+      const base = baseTextRef.current;
+      const next = (base ? base + " " : "") + transcript;
+      setText(next);
+      if (final) baseTextRef.current = next;
+    });
+  const toggleMic = () => {
+    if (listening) {
+      stopListen();
+    } else {
+      baseTextRef.current = text;
+      startListen();
+    }
+  };
 
   // Auto-grow
   useEffect(() => {
