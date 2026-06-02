@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, Paperclip, Send, Square, Mic, Image as ImageIcon } from "lucide-react";
+import { Loader2, Paperclip, Send, Square, Mic, MicOff, Image as ImageIcon, Volume2, VolumeX } from "lucide-react";
 import { createPending, releasePending, uploadAttachment, toMessageAttachment, type PendingAttachment } from "@/services/attachments";
 import type { MessageAttachment } from "@/lib/api/endpoints";
 import { PendingAttachmentCard } from "./attachment-card";
+import { useSpeechRecognition, useAutoSpeak, cancelSpeak } from "@/hooks/use-voice-mode";
 
 interface ComposerProps {
   disabled?: boolean;
@@ -23,6 +24,23 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [autoSpeak, setAutoSpeak] = useAutoSpeak();
+  const baseTextRef = useRef("");
+  const { listening, start: startListen, stop: stopListen, supported: micSupported } =
+    useSpeechRecognition((transcript, final) => {
+      const base = baseTextRef.current;
+      const next = (base ? base + " " : "") + transcript;
+      setText(next);
+      if (final) baseTextRef.current = next;
+    });
+  const toggleMic = () => {
+    if (listening) {
+      stopListen();
+    } else {
+      baseTextRef.current = text;
+      startListen();
+    }
+  };
 
   // Auto-grow
   useEffect(() => {
@@ -119,8 +137,24 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
             <ComposerIconButton onClick={() => imageInputRef.current?.click()} label="Attach image">
               <ImageIcon className="h-[18px] w-[18px]" />
             </ComposerIconButton>
-            <ComposerIconButton onClick={() => { /* voice placeholder */ }} label="Voice (coming soon)" disabled>
-              <Mic className="h-[18px] w-[18px]" />
+            <ComposerIconButton
+              onClick={toggleMic}
+              label={listening ? "Stop voice input" : micSupported ? "Voice input" : "Voice not supported in this browser"}
+              disabled={!micSupported}
+              active={listening}
+            >
+              {listening ? <MicOff className="h-[18px] w-[18px]" /> : <Mic className="h-[18px] w-[18px]" />}
+            </ComposerIconButton>
+            <ComposerIconButton
+              onClick={() => {
+                const next = !autoSpeak;
+                setAutoSpeak(next);
+                if (!next) cancelSpeak();
+              }}
+              label={autoSpeak ? "Mute spoken replies" : "Speak replies aloud"}
+              active={autoSpeak}
+            >
+              {autoSpeak ? <Volume2 className="h-[18px] w-[18px]" /> : <VolumeX className="h-[18px] w-[18px]" />}
             </ComposerIconButton>
           </div>
 
@@ -155,15 +189,20 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
   );
 }
 
-function ComposerIconButton({ onClick, label, disabled, children }: { onClick: () => void; label: string; disabled?: boolean; children: React.ReactNode }) {
+function ComposerIconButton({ onClick, label, disabled, active, children }: { onClick: () => void; label: string; disabled?: boolean; active?: boolean; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
+      aria-pressed={active}
       title={label}
-      className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+      className={`grid h-9 w-9 place-items-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent ${
+        active
+          ? "bg-primary/15 text-primary hover:bg-primary/20"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+      }`}
     >
       {children}
     </button>

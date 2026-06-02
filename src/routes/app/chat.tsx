@@ -12,6 +12,7 @@ import { ConversationItem } from "@/components/chat/conversation-item";
 import { ChatWelcome } from "@/components/chat/welcome";
 import { submitMemoryFeedback } from "@/lib/chat/feedback.functions";
 import type { MessageAttachment } from "@/lib/api/endpoints";
+import { speak as voiceSpeak, useAutoSpeak } from "@/hooks/use-voice-mode";
 
 
 
@@ -50,6 +51,9 @@ function ChatPage() {
   const [feedbackState, setFeedbackState] = useState<Record<string, "up" | "down">>({});
   // Local message overlay — optimistic user messages + assistant pin until DB persists.
   const [overlay, setOverlay] = useState<Record<string, Message[]>>({});
+  const [autoSpeak] = useAutoSpeak();
+  const autoSpeakRef = useRef(autoSpeak);
+  useEffect(() => { autoSpeakRef.current = autoSpeak; }, [autoSpeak]);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Race-proofing: only events whose envelope.requestId matches the active id
   // AND whose seq is strictly greater than the last accepted seq are applied.
@@ -317,6 +321,7 @@ function ChatPage() {
           ...curr,
           [convId!]: [...(curr[convId!] ?? []), finalAssistant],
         }));
+        if (autoSpeakRef.current) voiceSpeak(assembled);
       }
       // Attribute response meta so feedback knows which memories were used.
       if (doneMeta?.messageId) {
