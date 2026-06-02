@@ -202,7 +202,7 @@
       radial-gradient(50% 50% at 95% 15%, oklch(from var(--iris-3) l c h / 0.22), transparent 70%),
       radial-gradient(55% 45% at 85% 100%, oklch(from var(--iris-2) l c h / 0.30), transparent 70%),
       radial-gradient(45% 40% at 5% 90%, oklch(from var(--iris-4) l c h / 0.20), transparent 70%);
-    animation: aurora-drift 22s ease-in-out infinite alternate;
+    animation: aurora-drift 8s ease-in-out infinite alternate;
   }
 
   body::after {
@@ -291,7 +291,7 @@
     -webkit-background-clip: text;
             background-clip: text;
     color: transparent;
-    animation: shimmer-iris 8s ease-in-out infinite;
+    animation: shimmer-iris 3s ease-in-out infinite;
   }
 
   .grid-bg {
@@ -302,7 +302,17 @@
   }
 
   .text-balance { text-wrap: balance; }
-  .animate-status-pulse { animation: status-pulse 2s ease-in-out infinite; }
+  .animate-status-pulse { animation: status-pulse 1s ease-in-out infinite; }
+
+  /* Global speed-up: snappier transitions everywhere */
+  *, *::before, *::after {
+    transition-duration: 120ms !important;
+    animation-duration: 600ms;
+  }
+  .animate-status-pulse, [class*="animate-spin"], [class*="animate-pulse"] {
+    animation-duration: revert !important;
+  }
+
 
   .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
