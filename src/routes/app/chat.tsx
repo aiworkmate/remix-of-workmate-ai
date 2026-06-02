@@ -51,6 +51,9 @@ function ChatPage() {
   const [feedbackState, setFeedbackState] = useState<Record<string, "up" | "down">>({});
   // Local message overlay — optimistic user messages + assistant pin until DB persists.
   const [overlay, setOverlay] = useState<Record<string, Message[]>>({});
+  const [autoSpeak] = useAutoSpeak();
+  const autoSpeakRef = useRef(autoSpeak);
+  useEffect(() => { autoSpeakRef.current = autoSpeak; }, [autoSpeak]);
   const scrollRef = useRef<HTMLDivElement>(null);
   // Race-proofing: only events whose envelope.requestId matches the active id
   // AND whose seq is strictly greater than the last accepted seq are applied.
