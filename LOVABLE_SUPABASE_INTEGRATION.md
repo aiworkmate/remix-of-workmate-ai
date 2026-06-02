@@ -11,11 +11,20 @@ Do not apply directly to production until the migration plan is approved.
 
 ## Environment Mapping
 
-Frontend / Lovable:
+Frontend / Lovable Cloud:
 
 ```env
 VITE_SUPABASE_URL=https://zcgohpaocqolykadgsha.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_anon_key
+```
+
+The client also accepts these aliases for compatibility:
+
+```env
 VITE_SUPABASE_ANON_KEY=your_publishable_anon_key
+SUPABASE_URL=https://zcgohpaocqolykadgsha.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your_publishable_anon_key
+SUPABASE_ANON_KEY=your_publishable_anon_key
 ```
 
 Supabase Edge Function secrets only:
@@ -132,4 +141,3 @@ Medical mode is assistive only. The final response should separate:
 - Clinician review
 
 No autonomous diagnosis.
-

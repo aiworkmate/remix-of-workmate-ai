@@ -2,11 +2,25 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+const env = import.meta.env;
+
+function readEnv(...keys: string[]) {
+  for (const key of keys) {
+    const value = env[key] || process.env[key];
+    if (value) return value;
+  }
+  return undefined;
+}
+
 function createSupabaseClient() {
-  // Use import.meta.env for client-side (Vite build-time replacement)
-  // Fall back to process.env for SSR (server-side rendering)
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+  // Lovable Cloud may expose either the publishable-key or anon-key naming convention.
+  const SUPABASE_URL = readEnv('VITE_SUPABASE_URL', 'SUPABASE_URL');
+  const SUPABASE_PUBLISHABLE_KEY = readEnv(
+    'VITE_SUPABASE_PUBLISHABLE_KEY',
+    'VITE_SUPABASE_ANON_KEY',
+    'SUPABASE_PUBLISHABLE_KEY',
+    'SUPABASE_ANON_KEY',
+  );
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
@@ -37,4 +51,3 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
-
