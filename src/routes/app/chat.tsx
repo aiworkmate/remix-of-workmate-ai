@@ -318,6 +318,7 @@ function ChatPage() {
           ...curr,
           [convId!]: [...(curr[convId!] ?? []), finalAssistant],
         }));
+        if (autoSpeakRef.current) voiceSpeak(assembled);
       }
       // Attribute response meta so feedback knows which memories were used.
       if (doneMeta?.messageId) {
