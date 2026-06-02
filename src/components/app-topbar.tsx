@@ -20,7 +20,7 @@ export function AppTopbar() {
     .split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
 
   return (
-    <header className="glass-strong sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-3 sm:px-4 md:px-6">
+    <header className="glass-strong sticky top-0 z-30 mx-3 mt-3 flex h-14 shrink-0 items-center gap-2 rounded-2xl border border-border/60 px-3 shadow-elevated sm:gap-3 sm:px-4 md:px-5">
       {/* Mobile nav drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger asChild>
