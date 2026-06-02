@@ -137,8 +137,24 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
             <ComposerIconButton onClick={() => imageInputRef.current?.click()} label="Attach image">
               <ImageIcon className="h-[18px] w-[18px]" />
             </ComposerIconButton>
-            <ComposerIconButton onClick={() => { /* voice placeholder */ }} label="Voice (coming soon)" disabled>
-              <Mic className="h-[18px] w-[18px]" />
+            <ComposerIconButton
+              onClick={toggleMic}
+              label={listening ? "Stop voice input" : micSupported ? "Voice input" : "Voice not supported in this browser"}
+              disabled={!micSupported}
+              active={listening}
+            >
+              {listening ? <MicOff className="h-[18px] w-[18px]" /> : <Mic className="h-[18px] w-[18px]" />}
+            </ComposerIconButton>
+            <ComposerIconButton
+              onClick={() => {
+                const next = !autoSpeak;
+                setAutoSpeak(next);
+                if (!next) cancelSpeak();
+              }}
+              label={autoSpeak ? "Mute spoken replies" : "Speak replies aloud"}
+              active={autoSpeak}
+            >
+              {autoSpeak ? <Volume2 className="h-[18px] w-[18px]" /> : <VolumeX className="h-[18px] w-[18px]" />}
             </ComposerIconButton>
           </div>
 
