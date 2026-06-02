@@ -189,15 +189,20 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
   );
 }
 
-function ComposerIconButton({ onClick, label, disabled, children }: { onClick: () => void; label: string; disabled?: boolean; children: React.ReactNode }) {
+function ComposerIconButton({ onClick, label, disabled, active, children }: { onClick: () => void; label: string; disabled?: boolean; active?: boolean; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
+      aria-pressed={active}
       title={label}
-      className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+      className={`grid h-9 w-9 place-items-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent ${
+        active
+          ? "bg-primary/15 text-primary hover:bg-primary/20"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground"
+      }`}
     >
       {children}
     </button>
