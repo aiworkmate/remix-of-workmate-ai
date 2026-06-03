@@ -26,7 +26,7 @@ export function AppTopbar() {
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger asChild>
           <button
-            className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:hidden"
+            className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:h-9 sm:w-9 md:hidden"
             aria-label="Open navigation"
           >
             <Menu className="h-5 w-5" />
