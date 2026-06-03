@@ -115,7 +115,7 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
         </div>
       )}
 
-      <div className="flex flex-col gap-2 p-2.5">
+      <div className="flex flex-col gap-1.5 p-2 sm:gap-2 sm:p-2.5">
         <textarea
           ref={textareaRef}
           value={text}
@@ -124,9 +124,11 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
           onBlur={() => setFocused(false)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
           rows={1}
-          placeholder={dragOver ? "Drop files to attach…" : "Ask anything — Shift+Enter for new line"}
+          placeholder={dragOver ? "Drop files to attach…" : "Ask anything…"}
           disabled={disabled}
-          className="max-h-[200px] min-h-[28px] w-full resize-none bg-transparent px-2.5 py-1.5 text-[15px] leading-6 outline-none placeholder:text-muted-foreground/60 disabled:opacity-50"
+          enterKeyHint="send"
+          autoCapitalize="sentences"
+          className="max-h-[160px] min-h-[24px] w-full resize-none bg-transparent px-2 py-1 text-[15px] leading-6 outline-none placeholder:text-muted-foreground/60 disabled:opacity-50 sm:max-h-[200px] sm:px-2.5 sm:py-1.5"
         />
 
         <div className="flex items-center justify-between gap-2">
