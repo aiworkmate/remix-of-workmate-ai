@@ -576,7 +576,7 @@ function ThreadHeader({ title, canRename, onRename, onOpenDrawer }: { title: str
   useEffect(() => setDraft(title), [title]);
 
   return (
-    <div className="flex items-center justify-between border-b border-border px-6 py-3">
+    <div className="flex items-center justify-between border-b border-border px-3 py-2 sm:px-6 sm:py-3">
       <div className="flex min-w-0 items-center gap-2 text-sm">
         {onOpenDrawer && (
           <button
