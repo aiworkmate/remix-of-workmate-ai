@@ -104,8 +104,11 @@ function ChatPage() {
   ];
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages.length, streamingText]);
+    const el = scrollRef.current;
+    if (!el) return;
+    // 'auto' during streaming = no per-token janky smooth scroll; 60fps friendly.
+    el.scrollTo({ top: el.scrollHeight, behavior: isStreaming ? "auto" : "smooth" });
+  }, [messages.length, streamingText, isStreaming]);
 
   async function createConversation() {
     if (!user) return;
