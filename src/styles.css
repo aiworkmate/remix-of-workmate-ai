@@ -306,13 +306,12 @@
 
   /* Global speed-up: snappier transitions everywhere */
   *, *::before, *::after {
-    transition-duration: 120ms !important;
-    animation-duration: 600ms;
+    transition-duration: 150ms !important;
+    animation-duration: 500ms;
   }
-  .animate-status-pulse, [class*="animate-spin"], [class*="animate-pulse"] {
+  .animate-status-pulse, [class*="animate-spin"], [class*="animate-pulse"], [class*="animate-bounce"] {
     animation-duration: revert !important;
   }
-
 
   .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
   .scrollbar-thin::-webkit-scrollbar-thumb {
@@ -320,4 +319,70 @@
     border-radius: 8px;
   }
   .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+
+  /* Mobile ergonomics */
+  .pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+  .pt-safe { padding-top: max(0.5rem, env(safe-area-inset-top)); }
+
+  /* Smooth, momentum scrolling — no white flash, no overscroll chain */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    background-color: var(--color-background);
+  }
+
+  /* Message entrance — short and snappy */
+  @keyframes msg-in {
+    from { opacity: 0; transform: translate3d(0, 6px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
+  }
+  .animate-msg-in { animation: msg-in 180ms ease-out both; }
+
+  /* Streaming caret */
+  @keyframes blink { 50% { opacity: 0; } }
+  .cursor-blink { animation: blink 0.9s steps(1) infinite; }
+
+  /* Soft shadow used on composer */
+  .shadow-soft {
+    box-shadow:
+      0 1px 0 0 oklch(1 0 0 / 0.04) inset,
+      0 6px 24px -10px oklch(0 0 0 / 0.35);
+  }
+
+  /* Mesh backdrop for empty chat state */
+  .bg-mesh {
+    background:
+      radial-gradient(40% 35% at 20% 20%, oklch(from var(--iris-1) l c h / 0.18), transparent 70%),
+      radial-gradient(35% 30% at 80% 30%, oklch(from var(--iris-3) l c h / 0.16), transparent 70%),
+      radial-gradient(45% 40% at 50% 90%, oklch(from var(--iris-2) l c h / 0.18), transparent 70%);
+  }
+
+  /* Markdown content rhythm */
+  .prose-message > * + * { margin-top: 0.6rem; }
+  .prose-message p { line-height: 1.65; }
+  .prose-message pre {
+    background: oklch(from var(--background) l c h / 0.7);
+    border: 1px solid var(--color-border);
+    border-radius: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    overflow-x: auto;
+    font-size: 0.85em;
+  }
+  .prose-message code:not(pre code) {
+    background: oklch(from var(--iris-2) l c h / 0.15);
+    padding: 0.1rem 0.35rem;
+    border-radius: 0.3rem;
+    font-size: 0.9em;
+  }
+  .prose-message a { color: var(--color-primary-glow); text-decoration: underline; text-underline-offset: 2px; }
+  .prose-message ul, .prose-message ol { padding-left: 1.25rem; }
+  .prose-message li + li { margin-top: 0.25rem; }
+
+  /* No horizontal overflow on mobile, ever */
+  html, body { overflow-x: hidden; }
+
+  /* iOS: stop input zoom by guaranteeing >=16px text */
+  @media (max-width: 640px) {
+    textarea, input, select { font-size: 16px; }
+  }
 }
