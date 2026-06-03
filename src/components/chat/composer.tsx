@@ -115,7 +115,7 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
         </div>
       )}
 
-      <div className="flex flex-col gap-2 p-2.5">
+      <div className="flex flex-col gap-1.5 p-2 sm:gap-2 sm:p-2.5">
         <textarea
           ref={textareaRef}
           value={text}
@@ -124,9 +124,11 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
           onBlur={() => setFocused(false)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSubmit(); } }}
           rows={1}
-          placeholder={dragOver ? "Drop files to attach…" : "Ask anything — Shift+Enter for new line"}
+          placeholder={dragOver ? "Drop files to attach…" : "Ask anything…"}
           disabled={disabled}
-          className="max-h-[200px] min-h-[28px] w-full resize-none bg-transparent px-2.5 py-1.5 text-[15px] leading-6 outline-none placeholder:text-muted-foreground/60 disabled:opacity-50"
+          enterKeyHint="send"
+          autoCapitalize="sentences"
+          className="max-h-[160px] min-h-[24px] w-full resize-none bg-transparent px-2 py-1 text-[15px] leading-6 outline-none placeholder:text-muted-foreground/60 disabled:opacity-50 sm:max-h-[200px] sm:px-2.5 sm:py-1.5"
         />
 
         <div className="flex items-center justify-between gap-2">
@@ -167,7 +169,7 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
             <button
               onClick={onStop}
               type="button"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-destructive/90 text-destructive-foreground shadow-soft transition hover:bg-destructive active:scale-95"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-destructive/90 text-destructive-foreground shadow-soft transition hover:bg-destructive active:scale-95 sm:h-10 sm:w-10"
               aria-label="Stop generation"
               title="Stop generating"
             >
@@ -177,7 +179,7 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
             <button
               onClick={handleSubmit}
               disabled={!canSend}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow transition-all disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none enabled:hover:scale-105 active:scale-95"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow transition-all disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none enabled:hover:scale-105 active:scale-95 sm:h-10 sm:w-10"
               aria-label="Send message"
             >
               {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

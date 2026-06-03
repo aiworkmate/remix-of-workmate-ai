@@ -60,7 +60,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" },
       { title: "AI WorkMate — Secure Enterprise AI Operating System" },
       { name: "description", content: "AI WorkMate is a secure, multi-tenant AI operating system for enterprise workflows — chat, memory, uploads, automations, and analytics." },
       { name: "theme-color", content: "#141432" },

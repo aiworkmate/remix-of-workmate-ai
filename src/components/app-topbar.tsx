@@ -20,12 +20,13 @@ export function AppTopbar() {
     .split(" ").map((s) => s[0]).slice(0, 2).join("").toUpperCase();
 
   return (
-    <header className="glass-strong sticky top-0 z-30 mx-3 mt-3 flex h-14 shrink-0 items-center gap-2 rounded-2xl border border-border/60 px-3 shadow-elevated sm:gap-3 sm:px-4 md:px-5">
+    <header className="glass-strong sticky top-0 z-30 mx-2 mt-2 flex h-11 shrink-0 items-center gap-2 rounded-xl border border-border/60 px-2 shadow-elevated sm:mx-3 sm:mt-3 sm:h-14 sm:gap-3 sm:rounded-2xl sm:px-4 md:px-5">
+
       {/* Mobile nav drawer */}
       <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
         <SheetTrigger asChild>
           <button
-            className="grid h-9 w-9 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground md:hidden"
+            className="grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground sm:h-9 sm:w-9 md:hidden"
             aria-label="Open navigation"
           >
             <Menu className="h-5 w-5" />
