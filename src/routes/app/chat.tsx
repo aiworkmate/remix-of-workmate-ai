@@ -500,9 +500,9 @@ function ChatPage() {
         />
 
 
-        <div ref={scrollRef} className="relative flex-1 overflow-y-auto scrollbar-thin">
+        <div ref={scrollRef} className="smooth-scroll relative flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin">
           {messagesLoading ? (
-            <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
+            <div className="mx-auto max-w-3xl space-y-6 px-3 py-4 sm:space-y-8 sm:px-6 sm:py-8">
               <MessageSkeleton />
               <MessageSkeleton align="right" />
               <MessageSkeleton />
@@ -518,7 +518,7 @@ function ChatPage() {
               </div>
             </>
           ) : (
-            <div className="mx-auto max-w-3xl space-y-8 px-4 py-8 sm:px-6">
+            <div className="mx-auto max-w-3xl space-y-5 px-3 py-4 sm:space-y-8 sm:px-6 sm:py-8">
               {messages.map((m) => {
                 const meta = responseMeta[m.id];
                 return (
@@ -554,12 +554,13 @@ function ChatPage() {
           )}
         </div>
 
-        <div className="glass-strong border-t border-border px-3 pb-safe pt-3 sm:px-4 sm:pt-4">
+        <div className="glass-strong border-t border-border px-2 pb-safe pt-2 sm:px-4 sm:pt-3">
           <Composer isStreaming={isStreaming} onSend={sendMessage} onStop={stopStream} />
-          <p className="mx-auto mt-2 max-w-3xl text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
+          <p className="mx-auto mt-1.5 max-w-3xl text-center font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60 sm:mt-2">
             AI WorkMate can make mistakes. Verify important information.
           </p>
         </div>
+
 
       </section>
     </div>
