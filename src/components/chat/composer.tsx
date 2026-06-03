@@ -169,7 +169,7 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
             <button
               onClick={onStop}
               type="button"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-destructive/90 text-destructive-foreground shadow-soft transition hover:bg-destructive active:scale-95"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-destructive/90 text-destructive-foreground shadow-soft transition hover:bg-destructive active:scale-95 sm:h-10 sm:w-10"
               aria-label="Stop generation"
               title="Stop generating"
             >
@@ -179,7 +179,7 @@ export function Composer({ disabled, isStreaming, onSend, onStop }: ComposerProp
             <button
               onClick={handleSubmit}
               disabled={!canSend}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow transition-all disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none enabled:hover:scale-105 active:scale-95"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-primary text-primary-foreground shadow-glow transition-all disabled:cursor-not-allowed disabled:opacity-30 disabled:shadow-none enabled:hover:scale-105 active:scale-95 sm:h-10 sm:w-10"
               aria-label="Send message"
             >
               {isStreaming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
